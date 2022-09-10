@@ -1,14 +1,7 @@
 from __future__ import annotations
 
-from termcolor.termcolor import (
-    ATTRIBUTES,
-    COLORS,
-    HIGHLIGHTS,
-    RESET,
-    VERSION,
-    colored,
-    cprint,
-)
+from termcolor._version import VERSION, __version__
+from termcolor.termcolor import ATTRIBUTES, COLORS, HIGHLIGHTS, RESET, colored, cprint
 
 __all__ = [
     "ATTRIBUTES",
@@ -16,6 +9,7 @@ __all__ = [
     "HIGHLIGHTS",
     "RESET",
     "VERSION",
+    "__version__",
     "colored",
     "cprint",
 ]
