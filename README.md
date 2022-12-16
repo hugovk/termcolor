@@ -89,3 +89,18 @@ cprint("Attention!", "red", attrs=["bold"], file=sys.stderr)
 | Windows      | no      | no   | no        | no         | yes     | no        |
 | Cygwin SSH   | yes     | no   | color     | color      | color   | yes       |
 | Mac Terminal | yes     | no   | yes       | yes        | yes     | yes       |
+
+## Environment variables
+
+Colour can be disabled or enabled via the presence of environment variables (regardless
+of value, but a truthy value recommended).
+
+In priority order, if one of these is set, the later vars are not checked.
+
+| Env var                | Action                                   |
+| ---------------------- | ---------------------------------------- |
+| `ANSI_COLORS_DISABLED` | Disable colour                           |
+| `NO_COLOR`             | Disable colour, see https://no-color.org |
+| `FORCE_COLOR`          | Enable colour                            |
+
+For example, set `FORCE_COLOR=1` to always output in colour.
