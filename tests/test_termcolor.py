@@ -21,6 +21,12 @@ def setup_module() -> None:
             pass
 
 
+# run this before all tests
+def setup_function() -> None:
+    # Disable the cache
+    termcolor._can_do_colour.cache_clear()
+
+
 def test_basic(monkeypatch: pytest.MonkeyPatch) -> None:
     # Arrange
     monkeypatch.setattr("sys.stdout.isatty", lambda: True)

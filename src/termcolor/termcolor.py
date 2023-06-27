@@ -27,6 +27,7 @@ from __future__ import annotations
 import os
 import sys
 import warnings
+from functools import lru_cache
 from typing import Any, Iterable
 
 
@@ -97,6 +98,7 @@ COLORS = {
 RESET = "\033[0m"
 
 
+@lru_cache(maxsize=None)
 def _can_do_colour(
     *, no_color: bool | None = None, force_color: bool | None = None
 ) -> bool:
