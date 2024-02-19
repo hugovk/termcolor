@@ -33,7 +33,7 @@ jobs:
 
       - name: Tox tests
         run: |
-          python -m tox -e py -vvv
+          python -m tox -e py -rvvv
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3.1.5
