@@ -7,7 +7,6 @@ from typing import Any
 import pytest
 
 from termcolor import ATTRIBUTES, COLORS, HIGHLIGHTS, colored, cprint, termcolor
-from termcolor._types import Attribute, Color, Highlight
 
 ALL_COLORS = [*COLORS, None]
 ALL_HIGHLIGHTS = [*HIGHLIGHTS, None]
@@ -50,9 +49,9 @@ def assert_cprint(
     capsys: pytest.CaptureFixture[str],
     expected: str,
     text: str,
-    color: Color | None = None,
-    on_color: Highlight | None = None,
-    attrs: Iterable[Attribute] | None = None,
+    color: str | None = None,
+    on_color: str | None = None,
+    attrs: Iterable[str] | None = None,
     **kwargs: Any,
 ) -> None:
     cprint(text, color, on_color, attrs, **kwargs)
@@ -81,7 +80,7 @@ def assert_cprint(
 def test_color(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    color: Color,
+    color: str,
     expected: str,
 ) -> None:
     # Arrange
@@ -114,7 +113,7 @@ def test_color(
 def test_on_color(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    on_color: Highlight,
+    on_color: str,
     expected: str,
 ) -> None:
     # Arrange
@@ -142,7 +141,7 @@ def test_on_color(
 def test_attrs(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    attr: Attribute,
+    attr: str,
     expected: str,
 ) -> None:
     # Arrange
