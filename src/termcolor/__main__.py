@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import os
 
-from termcolor import cprint
+from termcolor import cprint, termcolor
 
 if __name__ == "__main__":
     print(f"Current terminal type: {os.getenv('TERM')}")
+    print(f"Can do colour: {termcolor._can_do_colour()}")
+    for env_var in ("ANSI_COLORS_DISABLED", "NO_COLOR", "FORCE_COLOR"):
+        print(f"{env_var}: {os.getenv(env_var)}")
     print("Test basic colors:")
     cprint("Black color", "black")
     cprint("Red color", "red")
