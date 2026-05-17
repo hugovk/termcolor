@@ -28,6 +28,11 @@ jobs:
           - "3.11"
           - "3.10"
         os: [windows-latest, macos-latest, ubuntu-latest]
+        exclude:
+          - os: windows-latest
+            python-version: "3.16"
+          - os: windows-latest
+            python-version: "3.16t"
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -44,12 +49,21 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }} (build from source)
         if: startsWith(matrix.python-version, '3.16')
         id: setup-python-build
-        uses: MatteoH2O1999/setup-python@1af1a6d642d3bc9b322c25d2e71378a213e41234 # v6.1.0
-        with:
-          python-version: "3.16"
-          freethreaded: ${{ endsWith(matrix.python-version, 't') }}
-          allow-build: force
-          cache-build: true
+        env:
+          PY_VERSION: ${{ matrix.python-version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYENV_DIR="$RUNNER_TEMP/pyenv"
+          PREFIX="$RUNNER_TEMP/cpython-$PY_VERSION"
+          git clone --depth 1 https://github.com/pyenv/pyenv.git "$PYENV_DIR"
+          "$PYENV_DIR/plugins/python-build/bin/python-build" "$PY_VERSION-dev" "$PREFIX"
+          if [[ "$PY_VERSION" == *t ]]; then
+            BIN="$PREFIX/bin/python3.16t"
+          else
+            BIN="$PREFIX/bin/python3"
+          fi
+          echo "python-path=$BIN" >> "$GITHUB_OUTPUT"
 
       - name: Set PYTHON_GIL
         if: endsWith(matrix.python-version, 't')
