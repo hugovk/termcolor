@@ -16,6 +16,8 @@ jobs:
       matrix:
         python-version:
           - "pypy3.11"
+          - "3.16t"
+          - "3.16"
           - "3.15t"
           - "3.15"
           - "3.14t"
@@ -33,10 +35,21 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
+        if: ${{ !startsWith(matrix.python-version, '3.16') }}
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
+
+      - name: Set up Python ${{ matrix.python-version }} (build from source)
+        if: startsWith(matrix.python-version, '3.16')
+        id: setup-python-build
+        uses: MatteoH2O1999/setup-python@1af1a6d642d3bc9b322c25d2e71378a213e41234 # v6.1.0
+        with:
+          python-version: "3.16"
+          freethreaded: ${{ endsWith(matrix.python-version, 't') }}
+          allow-build: force
+          cache-build: true
 
       - name: Set PYTHON_GIL
         if: endsWith(matrix.python-version, 't')
@@ -47,8 +60,11 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Tox tests
+        env:
+          PYTHON: ${{ steps.setup-python-build.outputs.python-path || matrix.python-version }}
+        shell: bash
         run: |
-          uvx --python ${{ matrix.python-version }} --with tox-uv tox -e py
+          uvx --python "$PYTHON" --with tox-uv tox -e py
 
       - name: Upload coverage
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
