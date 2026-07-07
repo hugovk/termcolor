@@ -89,6 +89,9 @@ def assert_cprint(
         ("light_blue", "\x1b[94mtext\x1b[0m"),
         ((1, 2, 3), "\x1b[38;2;1;2;3mtext\x1b[0m"),
         ((100, 200, 150), "\x1b[38;2;100;200;150mtext\x1b[0m"),
+        ("#FF5733", "\x1b[38;2;255;87;51mtext\x1b[0m"),
+        ("#ff5733", "\x1b[38;2;255;87;51mtext\x1b[0m"),
+        ("#F53", "\x1b[38;2;255;85;51mtext\x1b[0m"),
         (000, "text\x1b[0m"),  # invalid input type
     ],
 )
@@ -125,6 +128,9 @@ def test_color(
         ("on_light_blue", "\x1b[104mtext\x1b[0m"),
         ((1, 2, 3), "\x1b[48;2;1;2;3mtext\x1b[0m"),
         ((100, 200, 150), "\x1b[48;2;100;200;150mtext\x1b[0m"),
+        ("#FF5733", "\x1b[48;2;255;87;51mtext\x1b[0m"),
+        ("#ff5733", "\x1b[48;2;255;87;51mtext\x1b[0m"),
+        ("#F53", "\x1b[48;2;255;85;51mtext\x1b[0m"),
         (000, "text\x1b[0m"),  # invalid input type
     ],
 )
@@ -398,3 +404,31 @@ def test_invalid_rgb(rgb: tuple[int, ...]) -> None:
         colored("text", color=rgb, force_color=True)  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="Expected a tuple of 3 ints in range 0-255"):
         colored("text", on_color=rgb, force_color=True)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "hex_color",
+    [
+        "#",
+        "#F",
+        "#FF",
+        "#FFFF",
+        "#FFFFF",
+        "#FFFFFFF",
+        "#GGGGGG",
+        "#-10000",
+        "#+F5733",
+        "# F5733",
+        "#ff_00_",
+        "#FF_573",
+        "#0xF573",
+        "#0Xf573",
+        "#0x0",
+        "#１２３４５６",  # fullwidth digits
+    ],
+)
+def test_invalid_hex(hex_color: str) -> None:
+    with pytest.raises(ValueError, match="Expected a hex string"):
+        colored("text", color=hex_color, force_color=True)
+    with pytest.raises(ValueError, match="Expected a hex string"):
+        colored("text", on_color=hex_color, force_color=True)

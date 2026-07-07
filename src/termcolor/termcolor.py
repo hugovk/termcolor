@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import os
 import sys
-from functools import cache
+from functools import cache, lru_cache
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -131,6 +131,28 @@ def _check_rgb(rgb: tuple[int, int, int]) -> None:
         raise ValueError(msg)
 
 
+@lru_cache
+def _parse_hex(hex_color: str) -> tuple[int, int, int]:
+    digits = hex_color[1:]
+    if len(digits) == 3:
+        # Expand shorthand: "#F53" -> "FF5533"
+        d = digits
+        digits = f"{d[0]}{d[0]}{d[1]}{d[1]}{d[2]}{d[2]}"
+
+    if len(digits) == 6:
+        # Unlike int(digits, 16), bytes.fromhex rejects "0x"/"+"/"-",
+        # whitespace, underscores and non-ASCII digits
+        try:
+            r, g, b = bytes.fromhex(digits)
+        except ValueError:
+            pass
+        else:
+            return r, g, b
+
+    msg = f"Expected a hex string like '#RRGGBB' or '#RGB', got {hex_color!r}"
+    raise ValueError(msg)
+
+
 def colored(
     text: object,
     color: str | tuple[int, int, int] | None = None,
@@ -152,16 +174,17 @@ def colored(
         on_light_grey, on_dark_grey, on_light_red, on_light_green, on_light_yellow,
         on_light_blue, on_light_magenta, on_light_cyan.
 
-    Alternatively, both text colors (color) and highlights (on_color) may
-    be specified via a tuple of 0-255 ints (R, G, B).
+    Alternatively, text colors (color) and highlights (on_color) may
+    be specified via a tuple of 0-255 ints (R, G, B) or hex string.
 
     Available attributes:
         bold, dark, italic, underline, blink, reverse, concealed, strike.
 
     Example:
-        colored('Hello, World!', 'red', 'on_black', ['bold', 'blink'])
-        colored('Hello, World!', 'green')
-        colored('Hello, World!', (255, 0, 255))  # Purple
+        colored("Hello, World!", "red", "on_black", ["bold", "blink"])
+        colored("Hello, World!", "green")
+        colored("Hello, World!", (255, 0, 255))  # purple
+        colored("Hello, World!", "#FF5733")  # orange red
     """
     result = str(text)
     if not can_colorize(no_color=no_color, force_color=force_color):
@@ -172,14 +195,20 @@ def colored(
     rgb_back_fmt_str = "\033[48;2;%d;%d;%dm%s"
     if color is not None:
         if isinstance(color, str):
-            result = fmt_str % (COLORS[color], result)
+            if color.startswith("#"):
+                result = rgb_fore_fmt_str % (*_parse_hex(color), result)
+            else:
+                result = fmt_str % (COLORS[color], result)
         elif isinstance(color, tuple):
             _check_rgb(color)
             result = rgb_fore_fmt_str % (color[0], color[1], color[2], result)
 
     if on_color is not None:
         if isinstance(on_color, str):
-            result = fmt_str % (HIGHLIGHTS[on_color], result)
+            if on_color.startswith("#"):
+                result = rgb_back_fmt_str % (*_parse_hex(on_color), result)
+            else:
+                result = fmt_str % (HIGHLIGHTS[on_color], result)
         elif isinstance(on_color, tuple):
             _check_rgb(on_color)
             result = rgb_back_fmt_str % (on_color[0], on_color[1], on_color[2], result)

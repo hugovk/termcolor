@@ -55,6 +55,9 @@ cprint("Attention!", "red", attrs=["bold"], file=sys.stderr)
 
 # You can also specify 0-255 RGB ints via a tuple
 cprint("Both foreground and background can use tuples", (100, 150, 250), (50, 60, 70))
+
+# Or as hex strings
+cprint("Both foreground and background can use hex", "#6496fa", "#32323c")
 ```
 
 ## Text properties
@@ -79,7 +82,8 @@ cprint("Both foreground and background can use tuples", (100, 150, 250), (50, 60
 | `light_cyan`    | `on_light_cyan`    |             |
 
 You can also use any arbitrary RGB color specified as a tuple of 0-255 integers, for
-example, `(100, 150, 250)`.
+example, `(100, 150, 250)`, or as a hex string, for example, `"#6496FA"` or the
+shorthand `"#69F"`.
 
 ## Terminal properties
 
