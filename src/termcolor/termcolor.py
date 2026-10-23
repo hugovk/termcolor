@@ -31,7 +31,7 @@ from functools import cache
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Any
+    from typing import Any, Self
 
 
 ATTRIBUTES: dict[str, int] = {
@@ -132,6 +132,53 @@ def _check_rgb(rgb: tuple[int, int, int]) -> None:
     if len(rgb) != 3 or not all(0 <= c <= 255 for c in rgb):
         msg = f"Expected a tuple of 3 ints in range 0-255, got {rgb!r}"
         raise ValueError(msg)
+
+
+class Code(str):
+    """An ANSI escape code that is both a string and a function.
+
+    As a string, it is the code to switch the style on, or the empty string
+    when colour is disabled (see can_colorize), so it can be used directly:
+
+        print(f"{red}Hello{reset}")
+
+    When called, it wraps the text in the code and the matching code to switch
+    only that style off again, so styles can be nested:
+
+        print(bold(f"{red('Hello')}, World!"))
+    """
+
+    __slots__ = ("_enabled", "_off", "_on")
+
+    _enabled: bool
+    _off: str
+    _on: str
+
+    def __new__(cls, on: str, off: str) -> Self:
+        enabled = can_colorize()
+        self = super().__new__(cls, on if enabled else "")
+        self._on = on
+        self._off = off
+        self._enabled = enabled
+        return self
+
+    def __call__(
+        self,
+        text: object,
+        *,
+        no_color: bool | None = None,
+        force_color: bool | None = None,
+    ) -> str:
+        if no_color is None and force_color is None:
+            enabled = self._enabled
+        else:
+            enabled = can_colorize(no_color=no_color, force_color=force_color)
+        if not enabled:
+            return str(text)
+        return f"{self._on}{text}{self._off}"
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self._on!r}, {self._off!r})"
 
 
 def colored(

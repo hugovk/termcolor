@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from termcolor import ATTRIBUTES, colored, cprint, termcolor
+from termcolor import ATTRIBUTES, RESET, Code, colored, cprint, termcolor
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from pytest_codspeed import BenchmarkFixture
 
 TEXT = "Hello, World!"
+RED = "\033[31m"
 
 
 @pytest.fixture(autouse=True)
@@ -20,6 +21,22 @@ def _force_color(monkeypatch: pytest.MonkeyPatch) -> None:
     termcolor.can_colorize.cache_clear()
     # Warm the cache so the first benchmarked call is not a cache miss.
     colored(TEXT)
+
+
+@pytest.fixture
+def red() -> Code:
+    # Created here, after FORCE_COLOR is set, so the string form is non-empty
+    return Code("\033[31m", "\033[39m")
+
+
+@pytest.fixture
+def bold() -> Code:
+    return Code("\033[1m", "\033[22m")
+
+
+@pytest.fixture
+def reset() -> Code:
+    return Code(RESET, "")
 
 
 def test_colored_plain(benchmark: BenchmarkFixture) -> None:
@@ -60,3 +77,33 @@ def test_can_colorize(benchmark: BenchmarkFixture) -> None:
 
 def test_cprint(benchmark: BenchmarkFixture) -> None:
     benchmark(cprint, TEXT, "red", "on_blue", ["bold"])
+
+
+def test_fstring_plain_str(benchmark: BenchmarkFixture) -> None:
+    # Reference point for test_code_fstring: plain str constants
+    def fstring() -> str:
+        return f"{RED}{TEXT}{RESET}"
+
+    benchmark(fstring)
+
+
+def test_code_fstring(benchmark: BenchmarkFixture, red: Code, reset: Code) -> None:
+    def fstring() -> str:
+        return f"{red}{TEXT}{reset}"
+
+    benchmark(fstring)
+
+
+def test_code_call(benchmark: BenchmarkFixture, red: Code) -> None:
+    benchmark(red, TEXT)
+
+
+def test_code_call_nested(benchmark: BenchmarkFixture, red: Code, bold: Code) -> None:
+    def nested() -> str:
+        return bold(red(TEXT))
+
+    benchmark(nested)
+
+
+def test_code_call_force_color(benchmark: BenchmarkFixture, red: Code) -> None:
+    benchmark(red, TEXT, force_color=True)

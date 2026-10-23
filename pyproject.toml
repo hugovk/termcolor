@@ -44,6 +44,7 @@ classifiers = [
 dynamic = [ "version" ]
 optional-dependencies.tests = [
   "pytest>=9",
+  "pytest-benchmark",
   "pytest-codspeed",
   "pytest-cov",
 ]
