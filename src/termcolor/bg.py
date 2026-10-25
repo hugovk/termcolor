@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from termcolor.termcolor import HIGHLIGHTS, Code, _check_rgb
+from termcolor.termcolor import _RGB_BACK_FMT, HIGHLIGHTS, Code, _check_rgb
 
 __all__ = [
     "black",
@@ -35,7 +35,7 @@ def _bg(name: str) -> Code:
 def rgb(r: int, g: int, b: int) -> Code:
     """Background colour from 0-255 RGB ints."""
     _check_rgb((r, g, b))
-    return Code(f"\033[48;2;{r};{g};{b}m", _OFF)
+    return Code(f"\033[{_RGB_BACK_FMT % (r, g, b)}m", _OFF)
 
 
 black = _bg("black")

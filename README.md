@@ -61,7 +61,8 @@ cprint("Both foreground and background can use tuples", (100, 150, 250), (50, 60
 
 Each colour and attribute is also available as a code, which is both a string and a
 function. As a string, it switches the style on. Called with text, it wraps the text in
-the style and switches only that style off again, so styles can be nested:
+the style and switches only that style off again, so different kinds of style can be
+nested:
 
 ```python
 from termcolor import red, on_blue, bold, italic, reset
@@ -85,10 +86,16 @@ print(f"{attrs.bold}{fg.red}{bg.blue}Hello{reset} {italic}{red}{on_blue}World{re
 
 For RGB colours, use `fg.rgb(100, 150, 250)` and `bg.rgb(50, 60, 70)`.
 
+Nesting the same kind of style, such as two foreground colours, switches back to the
+terminal default rather than the outer style:
+
+```python
+print(red(f"Error in {blue('config.toml')}: not found"))  # ": not found" is not red
+```
+
 When colour is disabled (see [Overrides](#overrides)), the string form is empty and
-calling a code returns the text unchanged. The string form is decided when termcolor is
-imported. The call form also accepts `no_color` and `force_color` overrides, like
-`colored`.
+calling a code returns the text unchanged. The call form also accepts `no_color` and
+`force_color` overrides, like `colored`.
 
 ## Text properties
 

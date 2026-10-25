@@ -21,12 +21,10 @@ def setup_module() -> None:
     # By default, make sure no env vars already set for tests
     for var in ("ANSI_COLORS_DISABLED", "NO_COLOR", "FORCE_COLOR"):
         os.environ.pop(var, None)
-    # Importing termcolor populates the cache
-    termcolor.can_colorize.cache_clear()
 
 
 @pytest.fixture(autouse=True)
-def clear_lru_cache() -> Generator[Any, None, None]:
+def clear_lru_cache() -> Generator[Any]:
     """
     Tests may override the underpinnings of the system-under-test,
     clear the cache after each test to ensure a clean slate.

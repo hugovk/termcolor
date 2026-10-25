@@ -31,7 +31,7 @@ from functools import cache
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Any, Self
+    from typing import Any
 
 
 ATTRIBUTES: dict[str, int] = {
@@ -134,7 +134,7 @@ def _check_rgb(rgb: tuple[int, int, int]) -> None:
         raise ValueError(msg)
 
 
-class Code(str):
+class Code:
     """An ANSI escape code that is both a string and a function.
 
     As a string, it is the code to switch the style on, or the empty string
@@ -143,24 +143,33 @@ class Code(str):
         print(f"{red}Hello{reset}")
 
     When called, it wraps the text in the code and the matching code to switch
-    only that style off again, so styles can be nested:
+    only that style off again, so different kinds of style can be nested:
 
         print(bold(f"{red('Hello')}, World!"))
     """
 
-    __slots__ = ("_enabled", "_off", "_on")
+    __slots__ = ("_off", "_on")
 
-    _enabled: bool
-    _off: str
-    _on: str
-
-    def __new__(cls, on: str, off: str) -> Self:
-        enabled = can_colorize()
-        self = super().__new__(cls, on if enabled else "")
+    def __init__(self, on: str, off: str) -> None:
         self._on = on
         self._off = off
-        self._enabled = enabled
-        return self
+
+    def __str__(self) -> str:
+        return self._on if can_colorize() else ""
+
+    def __format__(self, format_spec: str) -> str:
+        on = self._on if can_colorize() else ""
+        return on if not format_spec else format(on, format_spec)
+
+    def __add__(self, other: object) -> str:
+        if isinstance(other, (str, Code)):
+            return str(self) + str(other)
+        return NotImplemented
+
+    def __radd__(self, other: object) -> str:
+        if isinstance(other, str):
+            return other + str(self)
+        return NotImplemented
 
     def __call__(
         self,
@@ -170,12 +179,24 @@ class Code(str):
         force_color: bool | None = None,
     ) -> str:
         if no_color is None and force_color is None:
-            enabled = self._enabled
+            # Fast path: functools.cache has a much cheaper key for no arguments
+            enabled = can_colorize()
         else:
             enabled = can_colorize(no_color=no_color, force_color=force_color)
         if not enabled:
             return str(text)
-        return f"{self._on}{text}{self._off}"
+        return f"{self._on}{text!s}{self._off}"
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Code):
+            return (self._on, self._off) == (other._on, other._off)
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash((self._on, self._off))
+
+    def __reduce__(self) -> tuple[type[Code], tuple[str, str]]:
+        return (type(self), (self._on, self._off))
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._on!r}, {self._off!r})"
