@@ -51,7 +51,7 @@ from termcolor.fg import (
     white,
     yellow,
 )
-from termcolor.termcolor import RESET, Code
+from termcolor.termcolor import RESET, _Escape
 
 __all__ = [
     "black",
@@ -100,4 +100,4 @@ __all__ = [
 ]
 
 # Reset everything. Empty when colour is disabled, unlike the raw RESET constant.
-reset = Code(RESET, "")
+reset = _Escape(RESET)

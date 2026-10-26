@@ -8,7 +8,18 @@ import pickle
 import pytest
 
 import termcolor
-from termcolor import ATTRIBUTES, COLORS, HIGHLIGHTS, RESET, Code, attrs, bg, codes, fg
+from termcolor import (
+    ATTRIBUTES,
+    COLORS,
+    HIGHLIGHTS,
+    RESET,
+    Code,
+    attrs,
+    bg,
+    codes,
+    fg,
+)
+from termcolor.termcolor import _Escape
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -129,6 +140,12 @@ def test_rgb_invalid(r: int, g: int, b: int) -> None:
 @pytest.mark.usefixtures("_color")
 def test_reset() -> None:
     assert str(codes.reset) == RESET == "\x1b[0m"
+    assert isinstance(codes.reset, _Escape)
+    assert not isinstance(codes.reset, Code)
+    assert not callable(codes.reset)
+    assert codes.reset == _Escape(RESET)
+    assert codes.reset != Code(RESET, "")
+    assert repr(codes.reset) == "_Escape('\\x1b[0m')"
 
 
 @pytest.mark.usefixtures("_color")

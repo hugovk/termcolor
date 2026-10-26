@@ -134,7 +134,55 @@ def _check_rgb(rgb: tuple[int, int, int]) -> None:
         raise ValueError(msg)
 
 
-class Code:
+class _Escape:
+    """An ANSI escape sequence with a lazy string form.
+
+    As a string, it is the sequence, or the empty string when colour is
+    disabled (see can_colorize). This is decided when it is used, not when it
+    is created, using the same cached check as colored().
+    """
+
+    __slots__ = ("_on",)
+
+    def __init__(self, on: str) -> None:
+        self._on = on
+
+    def __str__(self) -> str:
+        return self._on if can_colorize() else ""
+
+    def __format__(self, format_spec: str) -> str:
+        on = self._on if can_colorize() else ""
+        return on if not format_spec else format(on, format_spec)
+
+    def __add__(self, other: object) -> str:
+        if isinstance(other, (str, _Escape)):
+            return str(self) + str(other)
+        return NotImplemented
+
+    def __radd__(self, other: object) -> str:
+        if isinstance(other, str):
+            return other + str(self)
+        return NotImplemented
+
+    def _args(self) -> tuple[str, ...]:
+        return (self._on,)
+
+    def __eq__(self, other: object) -> bool:
+        if type(other) is type(self):
+            return self._on == other._on
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self._on)
+
+    def __reduce__(self) -> tuple[type[_Escape], tuple[str, ...]]:
+        return (type(self), self._args())
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({', '.join(map(repr, self._args()))})"
+
+
+class Code(_Escape):
     """An ANSI escape code that is both a string and a function.
 
     As a string, it is the code to switch the style on, or the empty string
@@ -148,28 +196,22 @@ class Code:
         print(bold(f"{red('Hello')}, World!"))
     """
 
-    __slots__ = ("_off", "_on")
+    __slots__ = ("_off",)
 
     def __init__(self, on: str, off: str) -> None:
-        self._on = on
+        super().__init__(on)
         self._off = off
 
-    def __str__(self) -> str:
-        return self._on if can_colorize() else ""
+    def _args(self) -> tuple[str, ...]:
+        return (self._on, self._off)
 
-    def __format__(self, format_spec: str) -> str:
-        on = self._on if can_colorize() else ""
-        return on if not format_spec else format(on, format_spec)
-
-    def __add__(self, other: object) -> str:
-        if isinstance(other, (str, Code)):
-            return str(self) + str(other)
+    def __eq__(self, other: object) -> bool:
+        if type(other) is type(self):
+            return self._on == other._on and self._off == other._off
         return NotImplemented
 
-    def __radd__(self, other: object) -> str:
-        if isinstance(other, str):
-            return other + str(self)
-        return NotImplemented
+    def __hash__(self) -> int:
+        return hash((self._on, self._off))
 
     def __call__(
         self,
@@ -186,20 +228,6 @@ class Code:
         if not enabled:
             return str(text)
         return f"{self._on}{text!s}{self._off}"
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, Code):
-            return (self._on, self._off) == (other._on, other._off)
-        return NotImplemented
-
-    def __hash__(self) -> int:
-        return hash((self._on, self._off))
-
-    def __reduce__(self) -> tuple[type[Code], tuple[str, str]]:
-        return (type(self), (self._on, self._off))
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self._on!r}, {self._off!r})"
 
 
 def colored(

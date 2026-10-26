@@ -42,9 +42,11 @@ classifiers = [
   "Typing :: Typed",
 ]
 dynamic = [ "version" ]
+optional-dependencies.benchmark = [
+  "pytest-benchmark",
+]
 optional-dependencies.tests = [
   "pytest>=9",
-  "pytest-benchmark",
   "pytest-codspeed",
   "pytest-cov",
 ]
